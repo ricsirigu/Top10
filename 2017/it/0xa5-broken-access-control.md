@@ -1,58 +1,58 @@
 # A5:2017 Broken Access Control
 
-| Threat agents/Attack vectors | Security Weakness  | Impacts |
+| Threat agents/Attack vectors | Problematica di sicurezza  | Impatti |
 | -- | -- | -- |
-| Access Lvl : Exploitability 2 | Prevalence 2 : Detectability 2 | Technical 3 : Business |
-| Exploitation of access control is a core skill of attackers. [SAST](https://www.owasp.org/index.php/Source_Code_Analysis_Tools) and [DAST](https://www.owasp.org/index.php/Category:Vulnerability_Scanning_Tools) tools can detect the absence of access control but cannot verify if it is functional when it is present. Access control is detectable using manual means, or possibly through automation for the absence of access controls in certain frameworks. | Access control weaknesses are common due to the lack of automated detection, and lack of effective functional testing by application developers. Access control detection is not typically amenable to automated static or dynamic testing. Manual testing is the best way to detect missing or ineffective access control, including HTTP method (GET vs PUT, etc), controller, direct object references, etc. | The technical impact is attackers acting as users or administrators, or users using privileged functions, or creating, accessing, updating or deleting every record. The business impact depends on the protection needs of the application and data. |
+| Access Lvl : Sfruttabilità 2 | Diffusione 2 : Individuazione 2 | Tecnici 3 : Business |
+| Sfruttare le vulnerabilità sul controllo degli accessi è una delle abilità principali degli attaccanti. Strumenti di [SAST](https://www.owasp.org/index.php/Source_Code_Analysis_Tools) e [DAST](https://www.owasp.org/index.php/Category:Vulnerability_Scanning_Tools) possono rilevare l'assenza di meccanismi di controllo degli accessi ma non possono verificarne l'efficacia se presenti. Tali meccanismi si possono identificare manualmente, o in modo automatizzato per ricercarne l'assenza in certi framework. | Le problematiche sul controllo degli accessi sono prevalenti in quanto sono difficili da identificare in modo automatizzato, e manca un testing funzionale efficace da parte degli sviluppatori. Il testing automatizzato, sia statico che dinamico, non è adatto per l'dentificazione di meccanismi di controllo degli accessi efficaci. Una procedura manuale è il modo migliore per rilevare meccanismi di controllo degli accessi mancanti o inefficaci, includendo metodi HTTP (GET vs PUT, ecc), controller, direct object references, ecc. | L'impatto tecnico è un attaccante che impersona utenti o amministratori, o utenti in grado di utilizzare funzionalità amministrative, o la creazione, la lettura, la modifica o la cancellazione di tutti i dati. L'impatto sul business dipende dai requisiti di protezione dell'applicazione e dei dati. |
 
-## Is the Application Vulnerable?
+## Sono vulnerabile?
 
-Access control enforces policy such that users cannot act outside of their intended permissions. Failures typically lead to unauthorized information disclosure, modification or destruction of all data, or performing a business function outside of the limits of the user. Common access control vulnerabilities include:
+Il controllo degli accessi fa rispettare una politica tale che gli utenti non possano agire al di fuori delle autorizzazioni previste. Fallimenti di questi controlli portano a divulgazione non autorizzata di informazioni, modifica o cancellazione di dati o svolgimento di funzionalità di business fuori dal dominio dell'utente. Vulnerabilità di questo tipo includono:
 
-* Bypassing access control checks by modifying the URL, internal application state, or the HTML page, or simply using a custom API attack tool.
-* Allowing the primary key to be changed to another's users record, permitting viewing or editing someone else's account.
-* Elevation of privilege. Acting as a user without being logged in, or acting as an admin when logged in as a user.
-* Metadata manipulation, such as replaying or tampering with a JSON Web Token (JWT) access control token or a cookie or hidden field manipulated to elevate privileges, or abusing JWT invalidation
-* CORS misconfiguration allows unauthorized API access.
-* Force browsing to authenticated pages as an unauthenticated user or to privileged pages as a standard user. Accessing API with missing access controls for POST, PUT and DELETE.
+* Bypassare il controllo degli accessi modificando l'URL, lo stato interno dell'applicazione, la pagina HTML o più semplicemente utilizzando uno strumento di attacco alle API.
+* Permettere che la chiave primaria venga modificata in quella del record di un altro utente, permettendo di leggere o modificare l'account di terzi.
+* Elevazione di privilegi. Agire come un utente senza aver svolto il login, o come un admin quando si è svolto il login come un utente base.
+* Manipolazione dei metadati, come svolgere il replay o modificare un JSON Web Token (JWT), un cookie o dei campi nascosti per elevare i privilegi, o abusare la funzionalità di invalidazione dei JWT.
+* Configurazioni errate degli header CORS che permettono accessi non autorizzati alle API.
+* Browsing forzato verso pagine protette da autenticazione come utente non autenticato o verso pagine privilegiate come utente standard. Accesso alle API senza controlli degli accessi per POST, PUT e DELETE.
 
-## How To Prevent
+## Come prevenire?
 
-Access control is only effective if enforced in trusted server-side code or server-less API, where the attacker cannot modify the access control check or metadata.
+Il controllo degli accessi è efficace solo se applicato anche lato server o su API server-less, dove l'attaccante non può modificarne i controlli o i metadati.
 
-* With the exception of public resources, deny by default.
-* Implement access control mechanisms once and re-use them throughout the application, including minimizing CORS usage.
-* Model access controls should enforce record ownership, rather than accepting that the user can create, read, update, or delete any record.
-* Unique application business limit requirements should be enforced by domain models.
-* Disable web server directory listing and ensure file metadata (e.g. .git) and backup files are not present within web roots.
-* Log access control failures, alert admins when appropriate (e.g. repeated failures).
-* Rate limit API and controller access to minimize the harm from automated attack tooling.
-* JWT tokens should be invalidated on the server after logout.
-* Developers and QA staff should include functional access control unit and integration tests.
+* Ad eccezione delle risorse pubbliche, applicare la politica "deny by default".
+* Centralizzare l'implementazione del controllo degli accessi e minimizzare l'utilizzo degli header CORS.
+* Modellare il controllo degli accessi sul concetto di "ownership", anzichè permettere agli utenti di creare, leggere, modificare o cancellare qualsiasi record.
+* Il modello dei dati deve rappresentare i requisiti di business in modo stringente.
+* Disabilitare il directory listing dal web server e assicurarsi che non siano presenti metadati (es. .git) e file di backup.
+* Memorizzare sul file di log gli errori dei meccanismi di controllo degli accessi, avvertire gli admin quando necessario (es. errori ripetuti)
+* Implementare meccanismi di rate limiting su API e controller per minimizzare il danno da strumenti di attacco automatizzati.
+* I token JWT devono essere invalidati dal server al momento del logout.
+* Gli sviluppatori e lo staff di QA dovrebbero includere test funzionali unitari e di integrazione sui meccanismi di controllo degli accessi.
 
-## Example Attack Scenarios
+## Esempi di Scenari di Attacco
 
-**Scenario #1**: The application uses unverified data in a SQL call that is accessing account information:
+**Scenario #1**: L'applicazione utilizza dati non verificati in una chiamata SQL che accede alle informazioni sugli account:
 
 ```
   pstmt.setString(1, request.getParameter("acct"));
   ResultSet results = pstmt.executeQuery();
 ```
 
-An attacker simply modifies the 'acct' parameter in the browser to send whatever account number they want. If not properly verified, the attacker can access any user's account.
+Un attaccante modifica semplicemente il parametro 'acct' nel browser per inviare un numero di account a suo piacimento. Se non verificato opportunamente, l'attaccante può accedere all'account di qualsiasi utente.
 
 `http://example.com/app/accountInfo?acct=notmyacct`
 
-**Scenario #2**: An attacker simply force browses to target URLs. Admin rights are required for access to the admin page.
+**Scenario #2**: Un attaccante forza la navigazione verso degli URL. Sono richiesti dei privilegi amministrativi per accedere alla pagina di amministrazione.
 
 ```
   http://example.com/app/getappInfo
   http://example.com/app/admin_getappInfo
 ```
 
-If an unauthenticated user can access either page, it’s a flaw. If a non-admin can access the admin page, this is a flaw.
+È presente una vulnerabilità sia che un utente non autenticato possa accedere a una delle pagine, sia che ci possa accedere un utente non amministratore.
 
-## References
+## Riferimenti
 
 ### OWASP
 
@@ -61,7 +61,7 @@ If an unauthenticated user can access either page, it’s a flaw. If a non-admin
 * [OWASP Testing Guide: Authorization Testing](https://www.owasp.org/index.php/Testing_for_Authorization)
 * [OWASP Cheat Sheet: Access Control](https://www.owasp.org/index.php/Access_Control_Cheat_Sheet)
 
-### External
+### Esterni
 
 * [CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')](https://cwe.mitre.org/data/definitions/22.html)
 * [CWE-284: Improper Access Control (Authorization)](https://cwe.mitre.org/data/definitions/284.html)
